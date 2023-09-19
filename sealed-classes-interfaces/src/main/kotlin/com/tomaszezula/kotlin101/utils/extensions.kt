@@ -10,6 +10,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
+import kotlinx.coroutines.CancellationException
 
 fun <T> tryRun(onError: (String) -> T, block: () -> T): T {
     return try {
@@ -22,6 +23,8 @@ fun <T> tryRun(onError: (String) -> T, block: () -> T): T {
 suspend fun <T> tryCall(onError: (String) -> T, block: suspend () -> T): T {
     return try {
         block()
+    } catch (e: CancellationException) {
+        throw e
     } catch (t: Throwable) {
         onError(t.message ?: "Unknown error")
     }
