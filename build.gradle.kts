@@ -30,6 +30,10 @@ allprojects {
         }
     }
     tasks.withType<Test> {
+        useJUnitPlatform()
+        reports {
+            junitXml.isOutputPerTestCase = true
+        }
         this.testLogging {
             this.showStandardStreams = true
         }

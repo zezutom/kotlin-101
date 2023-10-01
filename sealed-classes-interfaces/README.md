@@ -4,4 +4,4 @@
 * [Calculator improved example](src/main/kotlin/com/tomaszezula/kotlin101/sealed/CalculatorImproved.kt)
 * [REST API example](src/main/kotlin/com/tomaszezula/kotlin101/sealed/http)
 
-Detailed explanations can be found in this [blog post]().
+Detailed explanations can be found in this [blog post](https://www.tomaszezula.com/the-power-of-sealed-interfaces-in-kotlin).
