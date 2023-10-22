@@ -1,0 +1,39 @@
+### Send a webhook request
+< {%
+    const signature = crypto.hmac.sha256()
+        .withTextSecret(request.environment.get("secret"))
+        .updateWithText(request.body.tryGetSubstituted())
+        .digest().toHex();
+    const timestamp = new Date().getTime();
+    request.variables.set("signature", signature)
+    request.variables.set("timestamp", timestamp.toString())
+%}
+POST {{baseUrl}}/webhook
+Content-Type: application/json
+X-CUSTOM-REQUEST-TIMESTAMP: {{timestamp}}
+X-CUSTOM-SIGNATURE: {{signature}}
+
+{
+    "id": "{{$random.uuid}}",
+    "message": "Hello world!"
+}
+
+### Send a blocking webhook request. !! This is not the recommended way to use webhooks !!
+< {%
+    const signature = crypto.hmac.sha256()
+        .withTextSecret(request.environment.get("secret"))
+        .updateWithText(request.body.tryGetSubstituted())
+        .digest().toHex();
+    const timestamp = new Date().getTime();
+    request.variables.set("signature", signature)
+    request.variables.set("timestamp", timestamp.toString())
+%}
+POST {{baseUrl}}/webhook/blocking
+Content-Type: application/json
+X-CUSTOM-REQUEST-TIMESTAMP: {{timestamp}}
+X-CUSTOM-SIGNATURE: {{signature}}
+
+{
+    "id": "{{$random.uuid}}",
+    "message": "Hello world!"
+}
