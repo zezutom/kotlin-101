@@ -3,7 +3,8 @@ package com.tomaszezula.kotlin101.messagequeue.web
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tomaszezula.kotlin101.messagequeue.model.Event
 import com.tomaszezula.kotlin101.messagequeue.model.EventWrapper
-import com.tomaszezula.kotlin101.messagequeue.service.EventProducer
+import com.tomaszezula.kotlin101.messagequeue.service.EventHandler
+import com.tomaszezula.kotlin101.messagequeue.service.EventValidator
 import kotlinx.coroutines.reactive.awaitFirst
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -15,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.system.measureTimeMillis
 
-
 @RestController
-@RequestMapping("/webhook")
-class WebhookController(
-    private val eventProducer: EventProducer,
+@RequestMapping("/webhook/blocking")
+class BlockingWebhookHandler(
+    private val eventValidator: EventValidator,
+    private val eventHandler: EventHandler,
     private val objectMapper: ObjectMapper
 ) {
     companion object {
@@ -28,7 +29,6 @@ class WebhookController(
     }
 
     private val logger = LoggerFactory.getLogger(this::class.java)
-
     @PostMapping
     suspend fun handleWebhook(
         request: ServerHttpRequest,
@@ -40,7 +40,11 @@ class WebhookController(
                 val requestBody = request.body.single().awaitFirst()
                 val event = objectMapper.readValue(requestBody.asInputStream(), Event::class.java)
                 val eventWrapper = EventWrapper.create(timestampHeader, sigHeader, event)
-                eventProducer.publish(eventWrapper)
+                if (eventValidator.validate(eventWrapper)) {
+                    eventHandler.handle(eventWrapper.event)
+                } else {
+                    logger.debug("Ignoring invalid event, reason: Invalid signature")
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (t: Throwable) {
