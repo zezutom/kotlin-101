@@ -1,5 +1,7 @@
 # Webhook handling via a message queue
 
+> [Read a detailed blog post](https://www.tomaszezula.com/asynchronous-webhook-handling-with-webflux-kotlin-coroutines-and-kafka/)
+
 This is a simple example of how to handle webhooks via a message queue. It uses
 [Kafka](https://kafka.apache.org/) as the message queue provider.
 
