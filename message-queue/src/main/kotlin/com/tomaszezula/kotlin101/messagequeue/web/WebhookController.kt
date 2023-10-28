@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tomaszezula.kotlin101.messagequeue.model.Event
 import com.tomaszezula.kotlin101.messagequeue.model.EventWrapper
 import com.tomaszezula.kotlin101.messagequeue.service.EventProducer
+import com.tomaszezula.kotlin101.messagequeue.service.WebhookVerifier
 import kotlinx.coroutines.reactive.awaitFirst
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -20,7 +21,8 @@ import kotlin.system.measureTimeMillis
 @RequestMapping("/webhook")
 class WebhookController(
     private val eventProducer: EventProducer,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val webhookVerifier: WebhookVerifier
 ) {
     companion object {
         const val TIMESTAMP_HEADER = "x-custom-request-timestamp"
@@ -36,17 +38,24 @@ class WebhookController(
         @RequestHeader(SIG_HEADER) sigHeader: String,
     ): ResponseEntity<Unit> {
         measureTimeMillis {
-            try {
-                val requestBody = request.body.single().awaitFirst()
-                val event = objectMapper.readValue(requestBody.asInputStream(), Event::class.java)
-                val eventWrapper = EventWrapper.create(timestampHeader, sigHeader, event)
-                eventProducer.publish(eventWrapper)
+            return try {
+                val requestBody = request.body.single().awaitFirst().toString(Charsets.UTF_8)
+                logger.debug("Received webhook request: {}", requestBody)
+                if (webhookVerifier.isTrusted(timestampHeader, sigHeader, requestBody)) {
+                    val event = objectMapper.readValue(requestBody, Event::class.java)
+                    val eventWrapper = EventWrapper.create(timestampHeader, sigHeader, event)
+                    eventProducer.publish(eventWrapper)
+                    ResponseEntity.ok().build()
+                } else {
+                    logger.debug("Ignoring untrusted webhook request")
+                    ResponseEntity.status(403).build()
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (t: Throwable) {
                 logger.debug("Ignoring invalid event, reason: {}", t.message)
+                ResponseEntity.status(403).build()
             }
-            return ResponseEntity.ok().build()
         }
     }
 }

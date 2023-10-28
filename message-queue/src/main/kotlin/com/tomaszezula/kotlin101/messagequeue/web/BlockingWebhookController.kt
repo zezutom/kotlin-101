@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tomaszezula.kotlin101.messagequeue.model.Event
 import com.tomaszezula.kotlin101.messagequeue.model.EventWrapper
 import com.tomaszezula.kotlin101.messagequeue.service.EventHandler
-import com.tomaszezula.kotlin101.messagequeue.service.EventValidator
+import com.tomaszezula.kotlin101.messagequeue.service.WebhookVerifier
 import kotlinx.coroutines.reactive.awaitFirst
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -18,8 +18,8 @@ import kotlin.system.measureTimeMillis
 
 @RestController
 @RequestMapping("/webhook/blocking")
-class BlockingWebhookHandler(
-    private val eventValidator: EventValidator,
+class BlockingWebhookController(
+    private val webhookVerifier: WebhookVerifier,
     private val eventHandler: EventHandler,
     private val objectMapper: ObjectMapper
 ) {
@@ -29,6 +29,7 @@ class BlockingWebhookHandler(
     }
 
     private val logger = LoggerFactory.getLogger(this::class.java)
+
     @PostMapping
     suspend fun handleWebhook(
         request: ServerHttpRequest,
@@ -36,21 +37,24 @@ class BlockingWebhookHandler(
         @RequestHeader(SIG_HEADER) sigHeader: String,
     ): ResponseEntity<Unit> {
         measureTimeMillis {
-            try {
-                val requestBody = request.body.single().awaitFirst()
-                val event = objectMapper.readValue(requestBody.asInputStream(), Event::class.java)
-                val eventWrapper = EventWrapper.create(timestampHeader, sigHeader, event)
-                if (eventValidator.validate(eventWrapper)) {
+            return try {
+                val requestBody = request.body.single().awaitFirst().toString(Charsets.UTF_8)
+                logger.debug("Received webhook request: {}", requestBody)
+                if (webhookVerifier.isTrusted(timestampHeader, sigHeader, requestBody)) {
+                    val event = objectMapper.readValue(requestBody, Event::class.java)
+                    val eventWrapper = EventWrapper.create(timestampHeader, sigHeader, event)
                     eventHandler.handle(eventWrapper.event)
+                    ResponseEntity.ok().build()
                 } else {
-                    logger.debug("Ignoring invalid event, reason: Invalid signature")
+                    logger.debug("Ignoring untrusted webhook request")
+                    ResponseEntity.status(403).build()
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (t: Throwable) {
                 logger.debug("Ignoring invalid event, reason: {}", t.message)
+                ResponseEntity.status(403).build()
             }
-            return ResponseEntity.ok().build()
         }
     }
 }
