@@ -13,7 +13,6 @@ interface EventConsumer {
 
 @Service
 class EventConsumerImpl(
-    private val eventValidator: EventValidator,
     private val eventHandler: EventHandler,
     private val dispatcher: CoroutineDispatcher
 ) : EventConsumer {
@@ -22,11 +21,7 @@ class EventConsumerImpl(
 
     override suspend fun consume(eventWrapper: EventWrapper): Unit =
         withContext(dispatcher + MDCContext()) {
-            if (eventValidator.validate(eventWrapper)) {
-                logger.debug("Consuming event: {}", eventWrapper)
-                eventHandler.handle(eventWrapper.event)
-            } else {
-                logger.debug("Ignoring invalid event: {}", eventWrapper)
-            }
+            logger.debug("Consuming event: {}", eventWrapper)
+            eventHandler.handle(eventWrapper.event)
         }
 }

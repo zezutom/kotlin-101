@@ -5,3 +5,5 @@ spring:
 logging:
   level:
     com.tomaszezula: debug
+webhook:
+  secret: top-secret # Use a Secret Manager or an environment variable in production!

@@ -24,4 +24,5 @@ dependencies {
 
     testImplementation("io.kotest:kotest-runner-junit5:$kotest_version")
     testImplementation("io.kotest:kotest-assertions-core:$kotest_version")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
