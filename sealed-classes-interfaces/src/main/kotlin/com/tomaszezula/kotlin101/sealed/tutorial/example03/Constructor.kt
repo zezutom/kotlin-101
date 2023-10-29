@@ -1,4 +1,4 @@
-package com.tomaszezula.kotlin101.sealed.tutorial
+package com.tomaszezula.kotlin101.sealed.tutorial.example03
 
 sealed interface Error {
     val message: String
@@ -22,8 +22,10 @@ sealed class HttpError(override val message: String) : Error {
 class BadRequest(message: String) : HttpError(message)
 object NotFound : HttpError("Not found")
 
+data class Unauthorized(override val message: String) : Error
 fun main() {
 //    val error = HttpError("Bad request")  // Sealed classes cannot be instantiated
-    val error = HttpError.fromStatusCode(404)
+//    val unauthorized = Unauthorized(403)  // No access to the private constructor
+    val error = HttpError.fromStatusCode(400)
     println(error.message)
 }

@@ -1,4 +1,4 @@
-package com.tomaszezula.kotlin101.sealed.tutorial
+package com.tomaszezula.kotlin101.sealed.tutorial.example01
 
 enum class EnumResult {
     Success,
