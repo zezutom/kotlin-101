@@ -1,0 +1,9 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:9093
+    topic: events
+logging:
+  level:
+    com.tomaszezula: debug
+webhook:
+  secret: top-secret # Use a Secret Manager or an environment variable in production!
