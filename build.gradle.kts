@@ -11,8 +11,8 @@ buildscript {
 plugins {
     id("org.springframework.boot") version "3.1.3" apply false
     id("io.spring.dependency-management") version "1.1.3" apply false
-    kotlin("plugin.spring") version "1.8.22" apply false
-    kotlin("jvm") version "1.8.22" apply false
+    kotlin("plugin.spring") version "1.9.21" apply false
+    kotlin("jvm") version "1.9.21" apply false
 }
 
 group = "com.tomaszezula"
