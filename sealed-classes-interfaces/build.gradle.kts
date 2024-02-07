@@ -9,6 +9,9 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "1.8.22"
 }
 
+application {
+    mainClass.set("com.tomaszezula.kotlin101.sealed.http.App")
+}
 dependencies {
     // Logging
     implementation("ch.qos.logback:logback-classic:$logback_version")
