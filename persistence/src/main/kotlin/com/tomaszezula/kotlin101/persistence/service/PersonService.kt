@@ -36,4 +36,23 @@ class PersonService(
     fun attachPerson(detachedPerson: Person): Person {
         return personRepository.saveAndFlush(detachedPerson)
     }
+
+    @Transactional(readOnly = true)
+    fun findPersonByName(name: String): List<Person> {
+        return personRepository.findByName(name)
+    }
+
+    @Transactional
+    fun updatePersonName(oldName: String, newName: String): Int {
+        return personRepository.updateName(oldName, newName)
+    }
+
+    @Transactional(rollbackFor = [RuntimeException::class], noRollbackFor = [CertainNotSoSeriousException::class])
+    fun deletePersonByName(name: String, postDelete: () -> Unit = {}): Int {
+        val deletedCount = personRepository.deleteByName(name)
+        postDelete()
+        return deletedCount
+    }
 }
+
+class CertainNotSoSeriousException(message: String) : Exception(message)

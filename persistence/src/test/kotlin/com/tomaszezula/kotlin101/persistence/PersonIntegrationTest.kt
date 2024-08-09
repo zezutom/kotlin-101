@@ -2,23 +2,17 @@ package com.tomaszezula.kotlin101.persistence
 
 import com.tomaszezula.kotlin101.persistence.model.Person
 import com.tomaszezula.kotlin101.persistence.web.CreateOrUpdatePersonRequest
-import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.test.context.junit.jupiter.SpringExtension
-import org.testcontainers.containers.MySQLContainer
-import org.testcontainers.junit.jupiter.Testcontainers
 
-@Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ExtendWith(SpringExtension::class)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class PersonIntegrationTest {
+class PersonIntegrationTest : PersistenceTest() {
 
     @LocalServerPort
     private val port: Int = 0
@@ -26,22 +20,10 @@ class PersonIntegrationTest {
     @Autowired
     private lateinit var restTemplate: TestRestTemplate
 
-    private val mySQLContainer = MySQLContainer<Nothing>("mysql:5.6")
-
     private lateinit var person: Person
 
     private val url: String
         get() = "http://localhost:$port"
-
-    @BeforeAll
-    fun setUp() {
-        mySQLContainer.start()
-    }
-
-    @AfterAll
-    fun tearDown() {
-        mySQLContainer.stop()
-    }
 
     @BeforeEach
     fun beforeEach() {
